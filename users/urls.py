@@ -1,9 +1,9 @@
 from django.urls import path
 
-from users.views import POST_GET, Update_Delete
+from users.views import SingleStudent, MultipleStudents
 
 urlpatterns = [
-    path('', POST_GET),
-    path('<int:id>', Update_Delete)
+    path('', MultipleStudents.as_view()),
+    path('<int:id>', SingleStudent.as_view())
 
 ]

@@ -2,105 +2,74 @@ from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.shortcuts import render
 import json
 
-from task4.settings import BASE_DIR
+from .models import Student
+from django.core import serializers
+from django.views import View
 
-filePath = str(BASE_DIR) + '/users/data.json'
+class SingleStudent(View):
+    def get(self, request, *args, **kwargs):
+        id = kwargs['id']
+        data = Student.objects.filter(studentID=id)
+        data = serializers.serialize( 'json',data)
+        data= json.loads(data)
+        data[0]['fields']['studentID'] = data[0]['pk']
+        data[0] = data[0]['fields']
+        return JsonResponse(data, safe=False);
 
-## Open File for reading
-d = open(filePath)
-data = (d.read())
+    def put(elf, request, *args, **kwargs):
+        id = kwargs['id']
+        data = json.loads(request.body)
+        student = Student.objects.get(studentID=id)
+        student.firstName = data['firstName']
+        student.lastName = data['lastName']
+        student.age = data['age']
+        student.email = data['email']
+        student.studentClass = data['studentClass']
+        student.save()
 
-fullData = json.loads(data);  ## The full contents of the file
-data = json.loads(data)["userData"];  ##The Desired List of userData we need to Alter
+        print(student)
+        return JsonResponse(data);
 
-
-def writeInFile(updated_data):
-    ## Function for Writing the updated data in the File
-
-    fullData["userData"] = updated_data
-    with open(filePath, 'w') as w:
-        w.write(json.dumps(fullData))
-
-
-def POST_GET(request):
-    '''
-        Function that Deals with POST and GET Requests
-    :param request: Takes the sent Request
-    :return: Returns a Json Response
-    '''
-
-    ## For Get Requests, Simply Return the data as a Json Response
-    if request.method == 'GET':
-        return JsonResponse(data, safe=False)
-
-
-    ## For Post Requests,
-    elif request.method == 'POST':
-
-        post = json.loads(request.body)  ## Take the new Data from the request body
-
-        if isinstance(post, list):  ## if the input data is a list of multiple users,
-            for key in post:
-                data.append(key)
-        else:  ## if its a single user
-            data.append(post)
-
-        writeInFile(data)  ##Save in data.json
-
-        return JsonResponse(json.loads(request.body), safe=False)  ## Return the added data
-
-    return JsonResponse({"code": 300, "message": "Invalid Request."},
-                        safe=False)  ## If it's not a POST or a GET Request, Return an Error Message
-
-
-def Update_Delete(request, id):
-    '''
-        Function to deal with PUT and DELETE Requests
-    :param request: Takes the sent Request
-    :param id: Takes the id from the URL
-    :return: Returns a JsonResponse
-    '''
-
-    index = -1;  ## Index for the element to be deleted or updated
-
-    ## For PUT Requests,
-    if request.method == 'PUT':
-        put = json.loads(request.body)  ## Take the new data
-
-        for i in range(len(data)):  ##Search for an element with the same ID
-
-            if (data[i]["id"] == id):  ##IF FOUND, UPDATE IT
-                data[i] = put
-                index = i
-                writeInFile(data) ## Update data.json
-                break
-
-        ## If the operation was done, Return the Updated data else return an Error Message
-        if index != -1:
-            return JsonResponse(data[index], safe=False)
+    def delete(elf, request, *args, **kwargs):
+        id = kwargs['id']
+        Msg = ""
+        try:
+            inst = Student.objects.get(studentID=id).delete()
+        except Exception as e:
+            Msg=str(e)
         else:
-            return JsonResponse({"code": 404, "message": "User Not Found"},
-                                safe=False)  ## If it's not a POST or a GET Request, Return an Error Message
+            Msg = "Deleted"
 
 
-    ## For Delete Requests,
-    elif request.method == 'DELETE':
-
-        for i in range(len(data)): ## Search for the first element with the same ID
-
-            if (data[i]["id"] == id):
-                index = i
-                del data[i] ## Delete it
-                writeInFile(data) ## Update data.json
-                break
+        return JsonResponse({"message":Msg});
 
 
-        if index != -1:
-            return JsonResponse({"code": 200, "message": "Deleted."},
-                                safe=False)
+class MultipleStudents(View):
+    def get(self, request):
+        data = Student.objects.all()
+        print(data)
+        data = serializers.serialize('json', data)
+
+        data = json.loads(str(data));
+        for student in range(len(data)):
+            data[student]['fields']['studentID'] = data[student]['pk']
+            data[student] = data[student]['fields']
+        print(data)
+
+        return JsonResponse(data, safe=False);
+
+    def post(self, request):
+        data = json.loads(request.body)
+        print(data)
+        if isinstance(data, list):
+            for singleStudent in data:
+                Student.objects.create(firstName=singleStudent['firstName'], lastName=singleStudent['lastName'], email=singleStudent['email'],
+                                       studentClass=singleStudent['studentClass'], age=singleStudent['age'])
         else:
-            return JsonResponse({"code": 404, "message": "User Not Found."},
-                                safe=False)
+            Student.objects.create(firstName=data['firstName'], lastName=data['lastName'], email=data['email'],
+                                   studentClass=data['studentClass'], age=data['age'])
 
-    return JsonResponse({"code": 300, "message": "Invalid Request."},
-                                safe=False)
+        return JsonResponse(data, safe=False);
+
+
+
