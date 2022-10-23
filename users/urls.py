@@ -1,9 +1,17 @@
 from django.urls import path
 
-from users.views import SingleStudent, MultipleStudents
+from users.views import *
 
 urlpatterns = [
-    path('', MultipleStudents.as_view()),
-    path('<int:id>', SingleStudent.as_view())
+    path('students', MultipleStudents.as_view()),
+    path('students/<int:id>', SingleStudent.as_view()),
+
+    path('parents', MultipleParents.as_view()),
+    path('parents/<int:id>', SingleParent.as_view()),
+
+    path('subjects', MultipleSubjects.as_view()),
+    path('subjects/<int:id>', SingleSubject.as_view()),
+
+    path('students/<int:id>/editsubjects', EditSubject.as_view()),
 
 ]
