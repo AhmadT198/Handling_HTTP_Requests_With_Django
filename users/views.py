@@ -9,12 +9,12 @@ from django.views import View
 
 class SingleStudent(View):
     '''
-    Class for handling HTTP Requests for the endpoint 'localhost:8000/api/<int:id>
+        Class for handling HTTP Requests for the endpoint 'localhost:8000/school/students/<int:id>'
     '''
 
     def get(self, request, *args, **kwargs):
         '''
-        Handling GET Requests for the endpoint 'localhost:8000/api/<int:id>'
+        Handling GET Requests for the endpoint 'localhost:8000/school/students/<int:id>'
         :param request:
         :param args:
         :param kwargs:
@@ -23,36 +23,37 @@ class SingleStudent(View):
         id = kwargs['id']  ## ID from URL
 
         try:
-            data = Student.objects.filter(studentID=id)  ## Reading Student DATA
+            data = Student.objects.filter(studentID=id)  ## Reading Student Record
             ## Making the output in the form of a JSON object
             data = serializers.serialize('json', data)
             data = json.loads(data)
             data[0]['fields']['studentID'] = data[0]['pk']
             data[0] = data[0]['fields']
-        except Exception as e:
+
+        except Exception as e: ## Returning an error message incase it wasnt found.
             data = {"message": "Not Found"}
 
         return JsonResponse(data, safe=False);
 
     def put(elf, request, *args, **kwargs):
         '''
-                Handling PUT Requests for the endpoint 'localhost:8000/api/<int:id>'
+                Handling PUT Requests for the endpoint 'localhost:8000/school/students/<int:id>'
         :param request:
         :param args:
         :param kwargs:
         :return: Returns the Updated data of the student with the provided ID as a JSON Object
         '''
-        id = kwargs['id']
+        id = kwargs['id'] ## Extracting ID
 
         try:
             data = json.loads(request.body)
-            form = StudentForm(data=data, instance=Student.objects.get(studentID=id))
+            form = StudentForm(data=data, instance=Student.objects.get(studentID=id)) ## Updating the record
             if form.is_valid():
                 form.save()
                 return JsonResponse(form.data);
             return JsonResponse(form.errors, status=422)
 
-        except Exception as e:
+        except Exception as e: ## Returning suitable Error
             print(type(e))
             if str(e.__class__.__name__) == "JSONDecodeError":
                 data = {"message": "Invalid Input.", 'type': str(e.__class__.__name__)}
@@ -67,7 +68,7 @@ class SingleStudent(View):
 
     def delete(elf, request, *args, **kwargs):
         '''
-                Handling DELETE Requests for the endpoint 'localhost:8000/api/<int:id>'
+                Handling DELETE Requests for the endpoint 'localhost:8000/school/students/<int:id>'
         :param request:
         :param args:
         :param kwargs:
@@ -76,6 +77,7 @@ class SingleStudent(View):
         id = kwargs['id']
         Msg = ""
 
+        ## Try to delete and return the suitable message.
         try:
             Student.objects.get(studentID=id).delete()
         except Exception as e:
@@ -88,12 +90,12 @@ class SingleStudent(View):
 
 class MultipleStudents(View):
     '''
-        Class for handling HTTP Requests for the endpoint 'localhost:8000/api/'
+        Class for handling HTTP Requests for the endpoint 'localhost:8000/school/students'
     '''
 
     def get(self, request):
         '''
-            Handling GET Requests for the endpoint 'localhost:8000/api/' to Read Data from the database 'student'
+            Handling GET Requests for the endpoint 'localhost:8000/school/students' to Read Data from the database 'Student'
         :param request:
         :return: Returns The Required Data in the form of a JSON Object
         '''
@@ -111,7 +113,7 @@ class MultipleStudents(View):
 
     def post(self, request):
         '''
-                    Handling POST Requests for the endpoint 'localhost:8000/api/' and Adding sent data to the database 'student'
+                    Handling POST Requests for the endpoint 'localhost:8000/school/students' and Adding sent data to the database 'student'
         :param request:
         :return: Returns the newly added Data in the form of a JSON Object
         '''
@@ -120,7 +122,7 @@ class MultipleStudents(View):
             data = json.loads(request.body)
             output = []
             if isinstance(data, list):  ## if the sent data is a list :
-                for singleStudent in data:
+                for singleStudent in data: ## Iterate over each element in the list, and add it.
                     form = StudentForm(singleStudent)
                     if form.is_valid():
                         form.save()
@@ -147,7 +149,7 @@ class SingleParent(View):
 
     def get(self, request, *args, **kwargs):
         '''
-        Handling GET Requests for the endpoint 'localhost:8000/api/<int:id>'
+        Handling GET Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
         :param request:
         :param args:
         :param kwargs:
@@ -156,7 +158,8 @@ class SingleParent(View):
         id = kwargs['id']  ## ID from URL
 
         try:
-            data = Parent.objects.filter(parentID=id)  ## Reading Student DATA
+            data = Parent.objects.filter(parentID=id)  ## Reading Parent DATA
+
             ## Making the output in the form of a JSON object
             data = serializers.serialize('json', data)
             data = json.loads(data)
@@ -169,24 +172,24 @@ class SingleParent(View):
 
     def put(self, request, *args, **kwargs):
         '''
-                Handling PUT Requests for the endpoint 'localhost:8000/api/<int:id>'
+                Handling PUT Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
         :param request:
         :param args:
         :param kwargs:
         :return: Returns the Updated data of the student with the provided ID as a JSON Object
         '''
-        id = kwargs['id']
+        id = kwargs['id'] ## Extracting ID
 
         try:
             data = json.loads(request.body)
 
-            form = ParentForm(data=data, instance=Parent.objects.get(parentID=id))
+            form = ParentForm(data=data, instance=Parent.objects.get(parentID=id)) # Updating the Record
             if form.is_valid():
                 form.save()
                 return JsonResponse(form.data);
             return JsonResponse(form.errors, status=422)
 
-        except Exception as e:
+        except Exception as e: ## Return Suitable Error Message.
             if str(e.__class__.__name__) == "JSONDecodeError":
                 data = {"message": "Invalid Input.", 'type': str(e.__class__.__name__)}
                 return JsonResponse(data, status=422);
@@ -199,16 +202,17 @@ class SingleParent(View):
 
     def delete(elf, request, *args, **kwargs):
         '''
-                Handling DELETE Requests for the endpoint 'localhost:8000/api/<int:id>'
+                Handling DELETE Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
         :param request:
         :param args:
         :param kwargs:
         :return: Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
         '''
 
-        id = kwargs['id']
-        Msg = ""
+        id = kwargs['id'] ## Extracting ID
 
+        Msg = ""
+        ## Try and delete, and return a suitable message.
         try:
             Parent.objects.get(parentID=id).delete()
         except Exception as e:
@@ -221,12 +225,12 @@ class SingleParent(View):
 
 class MultipleParents(View):
     '''
-        Class for handling HTTP Requests for the endpoint 'localhost:8000/api/'
+        Class for handling HTTP Requests for the endpoint 'localhost:8000/school/parents'
     '''
 
     def get(self, request):
         '''
-            Handling GET Requests for the endpoint 'localhost:8000/api/' to Read Data from the database 'student'
+            Handling GET Requests for the endpoint 'localhost:8000/school/parents' to Read Data from the database 'Parent'
         :param request:
         :return: Returns The Required Data in the form of a JSON Object
         '''
@@ -244,7 +248,7 @@ class MultipleParents(View):
 
     def post(self, request):
         '''
-                    Handling POST Requests for the endpoint 'localhost:8000/api/' and Adding sent data to the database 'student'
+                    Handling POST Requests for the endpoint 'localhost:8000/school/parents' and Adding sent data to the database 'Parent'
         :param request:
         :return: Returns the newly added Data in the form of a JSON Object
         '''
@@ -252,7 +256,7 @@ class MultipleParents(View):
         try:
             data = json.loads(request.body)
             output = []
-            if isinstance(data, list):  ## if the sent data is a list :
+            if isinstance(data, list):  ## if the sent data is a list : iterate over each element and add it
                 for singleParent in data:
                     form = ParentForm(singleParent)
                     if form.is_valid():
@@ -260,6 +264,7 @@ class MultipleParents(View):
                         output.append(form.data)
                     else:
                         output.append(form.errors)
+
             else:  ##if it is a single JSON Object
                 form = ParentForm(data)
                 if form.is_valid():
