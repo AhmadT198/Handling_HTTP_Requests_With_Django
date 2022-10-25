@@ -52,7 +52,7 @@ class Student(models.Model):
     studentClass = models.IntegerField()
     age = models.IntegerField()
     parentID = models.ForeignKey(Parent, on_delete=models.SET_NULL, null=True)
-    subjects = models.ManyToManyField(Subject)
+    subjects = models.ManyToManyField(Subject, related_name="subjects")
 
 
 

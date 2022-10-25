@@ -12,6 +12,6 @@ urlpatterns = [
     path('subjects', MultipleSubjects.as_view()),
     path('subjects/<int:id>', SingleSubject.as_view()),
 
-    path('students/<int:id>/editsubjects', EditSubject.as_view()),
+    path('modify/<int:studentID>/<int:subjectID>', ModifySubjects.as_view()),
 
 ]
