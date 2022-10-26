@@ -15,17 +15,16 @@ class SubjectListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Subject
-        fields = ['url']
+        fields = ['url', "subjectName", "subjectID"]
 
 class StudentSerializer(serializers.HyperlinkedModelSerializer):
     firstName = serializers.CharField(max_length=50, validators=[nameCheck])
     lastName = serializers.CharField(max_length=50, validators=[nameCheck])
     subjects = SubjectListSerializer(many=True)
-    subjectlist = serializers.HyperlinkedRelatedField(many=True, view_name='subject-detail', read_only=True)
 
     class Meta:
         model = Student
-        fields = ["url", "subjectlist", "firstName", "lastName", "subjects"]
+        fields = ["url", "firstName", "lastName", "subjects"]
 
 
 class ParentSerializer(serializers.ModelSerializer):
@@ -37,7 +36,6 @@ class ParentSerializer(serializers.ModelSerializer):
 
 
 class SubjectSerializer(serializers.ModelSerializer):
-
     students = StudentSerializer(many=True)
     class Meta:
         model = Subject
