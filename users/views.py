@@ -1,428 +1,174 @@
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.shortcuts import render
 import json
+from .serializers import *
 from .forms import *
 from .models import Student
 from django.core import serializers
 from django.views import View
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, generics, mixins
 
 
-class SingleStudent(View):
+
+class SingleStudent(generics.GenericAPIView,
+                    mixins.UpdateModelMixin,  ## For PUT Request
+                    mixins.DestroyModelMixin, ## For DELETE Request
+                    mixins.RetrieveModelMixin): ## For GET Request
     '''
-        Class for handling HTTP Requests for the endpoint 'localhost:8000/school/students/<int:id>'
+        Class for handling HTTP Requests for the endpoint 'localhost:8000/api/school/students/<int:pk>'
     '''
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
 
     def get(self, request, *args, **kwargs):
         '''
-        Handling GET Requests for the endpoint 'localhost:8000/school/students/<int:id>'
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns the data of the student with the provided ID as a JSON Object
+        Handling GET Requests for the endpoint 'localhost:8000/api/school/students/<int:id>'
+            Returns the data of the student with the provided ID as a JSON Object
         '''
-        id = kwargs['id']  ## ID from URL
+        return self.retrieve(request, *args, *kwargs)
 
-        try:
-            data = Student.objects.filter(studentID=id)  ## Reading Student Record
-            ## Making the output in the form of a JSON object
-            data = serializers.serialize('json', data)
-            data = json.loads(data)
-            data[0]['fields']['studentID'] = data[0]['pk']
-            data[0] = data[0]['fields']
-
-        except Exception as e: ## Returning an error message incase it wasnt found.
-            data = {"message": "Not Found"}
-
-        return JsonResponse(data, safe=False);
-
-    def put(elf, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         '''
-                Handling PUT Requests for the endpoint 'localhost:8000/school/students/<int:id>'
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns the Updated data of the student with the provided ID as a JSON Object
+                Handling PUT Requests for the endpoint 'localhost:8000/api/school/students/<int:id>'
+        Returns the Updated data of the student with the provided ID as a JSON Object
         '''
-        id = kwargs['id'] ## Extracting ID
+        return self.update(request, *args, **kwargs)
 
-        try:
-            data = json.loads(request.body)
-            form = StudentForm(data=data, instance=Student.objects.get(studentID=id)) ## Updating the record
-            if form.is_valid():
-                form.save()
-                return JsonResponse(form.data);
-            return JsonResponse(form.errors, status=422)
-
-        except Exception as e: ## Returning suitable Error
-            print(type(e))
-            if str(e.__class__.__name__) == "JSONDecodeError":
-                data = {"message": "Invalid Input.", 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=422);
-
-            elif str(e.__class__.__name__) == "DoesNotExist":
-                data = {"message": "Not Found.", 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=404);
-            else:
-                data = {"message": str(e), 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=500);
-
-    def delete(elf, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         '''
-                Handling DELETE Requests for the endpoint 'localhost:8000/school/students/<int:id>'
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
+                Handling DELETE Requests for the endpoint 'localhost:8000/api/school/students/<int:id>'
+        Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
         '''
-        id = kwargs['id']
-        Msg = ""
-
-        ## Try to delete and return the suitable message.
-        try:
-            Student.objects.get(studentID=id).delete()
-        except Exception as e:
-            Msg = str(e)
-        else:
-            Msg = "Deleted"
-
-        return JsonResponse({"message": Msg});
+        return self.delete(request, *args, **kwargs)
 
 
-class MultipleStudents(View):
+class MultipleStudents(generics.GenericAPIView,
+                       mixins.CreateModelMixin,
+                       mixins.ListModelMixin
+                       ):
     '''
-        Class for handling HTTP Requests for the endpoint 'localhost:8000/school/students'
+        Class for handling HTTP Requests for the endpoint 'localhost:8000/api/school/students'
     '''
 
-    def get(self, request):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+    def get(self, request, *args, **kwargs):
         '''
-            Handling GET Requests for the endpoint 'localhost:8000/school/students' to Read Data from the database 'Student'
-        :param request:
-        :return: Returns The Required Data in the form of a JSON Object
-        '''
-
-        ## Read and Put data in the form of a JSON Object
-        data = Student.objects.all()
-        data = serializers.serialize('json', data)
-        data = json.loads(str(data));
-
-        for student in range(len(data)):
-            data[student]['fields']['studentID'] = data[student]['pk']
-            data[student] = data[student]['fields']
-
-        return JsonResponse(data, safe=False);
-
-    def post(self, request):
-        '''
-                    Handling POST Requests for the endpoint 'localhost:8000/school/students' and Adding sent data to the database 'student'
-        :param request:
-        :return: Returns the newly added Data in the form of a JSON Object
+            Handling GET Requests for the endpoint 'localhost:8000/api/school/students' to Read Data from the database 'Student'
+        Returns The Required Data in the form of a JSON Object
         '''
 
-        try:
-            data = json.loads(request.body)
-            output = []
-            if isinstance(data, list):  ## if the sent data is a list :
-                for singleStudent in data: ## Iterate over each element in the list, and add it.
-                    form = StudentForm(singleStudent)
-                    if form.is_valid():
-                        form.save()
-                        output.append(form.data)
-                    else:
-                        output.append(form.errors)
-            else:  ##if it is a single JSON Object
-                form = StudentForm(data)
-                if form.is_valid():
-                    form.save()
-                    output = data
-                else:
-                    output = form.errors
+        return self.list(request, *args, **kwargs)
 
-            return JsonResponse(json.loads(json.dumps(output)), safe=False)
-        except Exception as e:
-            return JsonResponse({"message": "Invalid Error."}, status=500)
+    def post(self, request, *arg, **kwargs):
+        '''
+                    Handling POST Requests for the endpoint 'localhost:8000/api/school/students' and Adding sent data to the database 'student'
+        Returns the newly added Data in the form of a JSON Object
+        '''
 
+        return self.create(request, *arg, **kwargs)
 
-class SingleParent(View):
+class SingleParent(APIView):
     '''
     Class for handling HTTP Requests for the endpoint 'localhost:8000/api/<int:id>
     '''
 
     def get(self, request, *args, **kwargs):
         '''
-        Handling GET Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns the data of the student with the provided ID as a JSON Object
+            Handling GET Requests for the endpoint 'localhost:8000/api/school/parents/<int:id>'
+        Returns the data of the student with the provided ID as a JSON Object
         '''
         id = kwargs['id']  ## ID from URL
 
         try:
-            data = Parent.objects.filter(parentID=id)  ## Reading Parent DATA
-
-            ## Making the output in the form of a JSON object
-            data = serializers.serialize('json', data)
-            data = json.loads(data)
-            data[0]['fields']['parentID'] = data[0]['pk']
-            data[0] = data[0]['fields']
-        except Exception as e:
-            data = {"message": "Not Found"}
-
-        return JsonResponse(data, safe=False);
+            data = ParentSerializer(Parent.objects.get(parentID=id))
+            return Response(data.data)
+        except Parent.DoesNotExist:  ## Handling Error
+            return Response(status.HTTP_404_NOT_FOUND)
 
     def put(self, request, *args, **kwargs):
         '''
-                Handling PUT Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns the Updated data of the student with the provided ID as a JSON Object
+                Handling PUT Requests for the endpoint 'localhost:8000/api/school/parents/<int:id>'
+        Returns the Updated data of the student with the provided ID as a JSON Object
         '''
-        id = kwargs['id'] ## Extracting ID
+        id = kwargs['id']  ## Extracting ID
 
-        try:
-            data = json.loads(request.body)
-
-            form = ParentForm(data=data, instance=Parent.objects.get(parentID=id)) # Updating the Record
-            if form.is_valid():
-                form.save()
-                return JsonResponse(form.data);
-            return JsonResponse(form.errors, status=422)
-
-        except Exception as e: ## Return Suitable Error Message.
-            if str(e.__class__.__name__) == "JSONDecodeError":
-                data = {"message": "Invalid Input.", 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=422);
-            elif str(e.__class__.__name__) == "DoesNotExist":
-                data = {"message": "Not Found.", 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=404);
-            else:
-                data = {"message": str(e), 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=500);
-
-    def delete(elf, request, *args, **kwargs):
-        '''
-                Handling DELETE Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
-        '''
-
-        id = kwargs['id'] ## Extracting ID
-
-        Msg = ""
-        ## Try and delete, and return a suitable message.
-        try:
-            Parent.objects.get(parentID=id).delete()
-        except Exception as e:
-            Msg = str(e)
+        data = ParentSerializer(data=request.data, instance=Parent.objects.get(parentID=id))
+        if data.is_valid():
+            data.save()
+            return Response(data.data)
         else:
-            Msg = "Deleted"
-
-        return JsonResponse({"message": Msg});
+            return Response(data.errors)
 
 
-class MultipleParents(View):
+def delete(elf, request, *args, **kwargs):
     '''
-        Class for handling HTTP Requests for the endpoint 'localhost:8000/school/parents'
+            Handling DELETE Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
+    Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
+    '''
+
+    id = kwargs['id']  ## Extracting ID
+
+    Msg = ""
+    ## Try and delete, and return a suitable message.
+    try:
+        Parent.objects.get(parentID=id).delete()
+    except Exception as e:
+        Msg = str(e)
+    else:
+        Msg = "Deleted"
+
+    return JsonResponse({"message": Msg});
+
+
+class MultipleParents(APIView):
+    '''
+        Class for handling HTTP Requests for the endpoint 'localhost:8000/api/school/parents'
     '''
 
     def get(self, request):
         '''
-            Handling GET Requests for the endpoint 'localhost:8000/school/parents' to Read Data from the database 'Parent'
-        :param request:
-        :return: Returns The Required Data in the form of a JSON Object
+            Handling GET Requests for the endpoint 'localhost:8000/api/school/parents' to Read Data from the database 'Parent'
+        Returns The Required Data in the form of a JSON Object
         '''
 
-        ## Read and Put data in the form of a JSON Object
-        data = Parent.objects.all()
-        data = serializers.serialize('json', data)
-        data = json.loads(str(data));
-
-        for parent in range(len(data)):
-            data[parent]['fields']['parentID'] = data[parent]['pk']
-            data[parent] = data[parent]['fields']
-
-        return JsonResponse(data, safe=False);
+        ## Read and Return Data
+        data = ParentSerializer(Parent.objects.all(), many=True)
+        return Response(data.data)
 
     def post(self, request):
         '''
-                    Handling POST Requests for the endpoint 'localhost:8000/school/parents' and Adding sent data to the database 'Parent'
-        :param request:
-        :return: Returns the newly added Data in the form of a JSON Object
+                    Handling POST Requests for the endpoint 'localhost:8000/api/school/parents' and Adding sent data to the database 'Parent'
+        Returns the newly added Data in the form of a JSON Object.
         '''
 
-        try:
-            data = json.loads(request.body)
-            output = []
-            if isinstance(data, list):  ## if the sent data is a list : iterate over each element and add it
-                for singleParent in data:
-                    form = ParentForm(singleParent)
-                    if form.is_valid():
-                        form.save()
-                        output.append(form.data)
-                    else:
-                        output.append(form.errors)
-
-            else:  ##if it is a single JSON Object
-                form = ParentForm(data)
-                if form.is_valid():
-                    form.save()
-                    output = data
-                else:
-                    output = form.errors
-
-            return JsonResponse(json.loads(json.dumps(output)), safe=False)
-        except Exception as e:
-            return JsonResponse({"message": "Invalid Error."}, status=500)
+        data = ParentSerializer(data=request.data, many=True)
+        if data.is_valid():
+            data.save()
+            return Response(data.data)
+        else:
+            return Response(data.errors)
 
 
-class MultipleSubjects(View):
+class MultipleSubjects(generics.ListCreateAPIView):
     '''
         Class for handling HTTP Requests for the endpoint 'localhost:8000/school/subjects'
     '''
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
 
-    def get(self, request):
-        '''
-            Handling GET Requests for the endpoint ''localhost:8000/school/subjects' to Read Multiple Records from the database 'subject'
-        :param request:
-        :return: Returns The Required Data in the form of a JSON Object
-        '''
-
-        ## Read and Put data in the form of a JSON Object
-        data = Subject.objects.all()
-        data = serializers.serialize('json', data)
-        data = json.loads(str(data));
-
-
-        ## Prepare the form of the output
-        output = []
-        for subject in data:
-            subject['fields']['subjectID'] = subject['pk']
-            output.append(subject['fields'])
-
-        return JsonResponse(json.loads(json.dumps(output)), safe=False);
-
-    def post(self, request):
-        '''
-                    Handling POST Requests for the endpoint 'localhost:8000/school/subjects' and Adding sent data to the database 'subjects'
-        :param request:
-        :return: Returns the newly added Data in the form of a JSON Object
-        '''
-
-        try:
-            data = json.loads(request.body)
-
-            output = []
-            if isinstance(data, list):  ## if the sent data is a list :
-                for singleSubject in data: ## For each subject append its corresponding data or Error if any.
-                    form = SubjectForm(singleSubject)
-                    if form.is_valid():
-                        form.save()
-                        output.append(form.data)
-                    else:
-                        output.append(form.errors)
-            else:  ##if it is a single JSON Object
-                form = SubjectForm(data)
-                if form.is_valid():
-                    form.save()
-                    output = data
-                else:
-                    output = form.errors
-
-            return JsonResponse(json.loads(json.dumps(output)), safe=False)
-        except Exception as e:
-            return JsonResponse({"message": "Invalid Input."}, status=422)
-
-
-class SingleSubject(View):
+class SingleSubject(generics.DestroyAPIView,
+                    generics.RetrieveAPIView,
+                    generics.UpdateAPIView):
     '''
         Class for handling HTTP Requests for the endpoint 'localhost:8000/school/subjects/<int:id>'
     '''
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
 
-    def get(self, request, *args, **kwargs):
-        '''
-            Gets the Data of a specified subject, or says it doesnt exist.
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns a JSON object with the Required Data.
-        '''
-        id = kwargs['id']  ## ID from URL
-
-        try:
-            data = Subject.objects.filter(subjectID=id)  ## Reading subject DATA
-
-            ## Making the output in the form of a JSON object
-            data = serializers.serialize('json', data)
-            data = json.loads(data)
-            data[0]['fields']['subjectID'] = data[0]['pk']
-            data[0] = data[0]['fields']
-
-        except Exception as e: ## Return "Not Found"
-            data = {"message": "Not Found"}
-
-        return JsonResponse(data, safe=False);
-
-    def put(self, request, *args, **kwargs):
-        '''
-                    Handling POST Requests for the endpoint 'localhost:8000/school/subjects/<int:id>' and Adding sent data to the database 'subject'
-        :param request:
-        :return: Returns the newly added Data in the form of a JSON Object
-        '''
-
-        id = kwargs['id']
-
-        try:
-            data = json.loads(request.body)
-            output = []
-            if isinstance(data, dict):  ## if the sent data is a single element (dict) :
-
-                form = SubjectForm(data, instance=Subject.objects.get(subjectID=id)) ## Update
-                if form.is_valid():
-                    form.save()
-                    output = data
-                else:
-                    output = form.errors
-            else:  ## Return an Error message.
-                return JsonResponse({"message": "Invalid Input."}, status=422)
-
-            return JsonResponse(json.loads(json.dumps(output)), safe=False)
-        except Exception as e: ## Handling Various Errors
-            if str(e.__class__.__name__) == "JSONDecodeError":
-                data = {"message": "Invalid Input.", 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=422);
-            elif str(e.__class__.__name__) == "DoesNotExist":
-                data = {"message": "Not Found.", 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=404);
-            else:
-                data = {"message": str(e), 'type': str(e.__class__.__name__)}
-                return JsonResponse(data, status=500);
-
-    def delete(elf, request, *args, **kwargs):
-        '''
-                Handling DELETE Requests for the endpoint 'localhost:8000/school/subjects/<int:id>'
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
-        '''
-
-        id = kwargs['id']
-        Msg = ""
-
-        try: ## Try to delete, and update the message accordingly
-            Subject.objects.get(subjectID=id).delete()
-        except Exception as e:
-            Msg = str(e)
-        else:
-            Msg = "Deleted"
-
-        return JsonResponse({"message": Msg});
-
-
-class ModifySubjects(View):
+class ModifySubjects(APIView):
     '''
         A Class to Check, Add, or Delete the relationship between a specific Subject and a specific Student
     '''
@@ -440,7 +186,6 @@ class ModifySubjects(View):
         studID = kwargs['studentID']
         subID = kwargs['subjectID']
 
-
         Msg = {}
         try:
             ## Get the desired Records from the tables
@@ -454,10 +199,10 @@ class ModifySubjects(View):
                 Msg = {"message": f"Student {stud} doesnt have the subject {sub}", "code": 204}
 
 
-        except Exception as e: ## Return the error message and type, incase an error occurs
+        except Exception as e:  ## Return the error message and type, incase an error occurs
             Msg = {"type": str(e.__class__.__name__), "message": str(e), 'code': 500}
 
-        return JsonResponse(Msg, status=Msg['code']);
+        return Response(Msg, status=Msg['code']);
 
     def post(self, request, *args, **kwargs):
         '''
@@ -483,14 +228,14 @@ class ModifySubjects(View):
             ## If the subject already exists, return a message indicating that.
             if sub in stud.subjects.all():
                 Msg = {"message": f"Student {stud} already has the subject {sub}", "code": 200}
-            else: ## Else, Add the subject and return a suitable message
+            else:  ## Else, Add the subject and return a suitable message
                 stud.subjects.add(sub)
                 Msg = {"message": f"the subject {sub} has been add successfully to the Student {stud}.", "code": 204}
 
-        except Exception as e: ## Return the error message and exception type, incase an error occurs
+        except Exception as e:  ## Return the error message and exception type, incase an error occurs
             Msg = {"type": str(e.__class__.__name__), "message": str(e), 'code': 500}
 
-        return JsonResponse(Msg, status=Msg['code']);
+        return Response(Msg, status=Msg['code']);
 
     def delete(self, request, *args, **kwargs):
         '''
@@ -501,11 +246,9 @@ class ModifySubjects(View):
         :return: Returns a JSON object with a message that indicate whether the subject was deleted or if there is no such relationship.
         '''
 
-
         ## Extracting IDs
         studID = kwargs['studentID'];
         subID = kwargs['subjectID']
-
 
         Msg = {}
         try:
@@ -518,10 +261,10 @@ class ModifySubjects(View):
             if sub in stud.subjects.all():
                 stud.subjects.remove(sub)
                 Msg = {"message": f"Deleted Successfully !", "code": 200}
-            else: ## If the relationship does not exist, Return a suitable message.
+            else:  ## If the relationship does not exist, Return a suitable message.
                 Msg = {"message": f"the Student {stud} does not have the subject {sub}.", "code": 204}
 
-        except Exception as e: ## Return the error message and exception type, incase an error occurs
+        except Exception as e:  ## Return the error message and exception type, incase an error occurs
             Msg = {"type": str(e.__class__.__name__), "message": str(e), 'code': 500}
 
-        return JsonResponse(Msg, status=Msg['code']);
+        return Response(Msg, status=Msg['code']);
