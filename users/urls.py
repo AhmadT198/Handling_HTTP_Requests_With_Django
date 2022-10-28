@@ -15,6 +15,7 @@ urlpatterns = [
 
     path('modify/<int:studentID>/<int:subjectID>', ModifySubjects.as_view()),
 
-    path('register', Register.as_view(), name="accounts-detail")
-
+    path('register', Register.as_view(), name="accounts-detail"),
+    path('login', login.as_view()),
+    path('logout', Logout.as_view())
 ]

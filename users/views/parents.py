@@ -2,6 +2,8 @@
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.shortcuts import render
 import json
+
+from ..permissions import *
 from ..serializers import *
 from ..forms import *
 from ..models import Student
@@ -16,7 +18,8 @@ class SingleParent(APIView):
     '''
     Class for handling HTTP Requests for the endpoint 'localhost:8000/api/<int:id>
     '''
-
+    authentication_classes = [SessionAuth]
+    permission_classes = [UserPermission]
     def get(self, request, *args, **kwargs):
         '''
             Handling GET Requests for the endpoint 'localhost:8000/api/school/parents/<int:id>'
@@ -35,7 +38,7 @@ class SingleParent(APIView):
                 Handling PUT Requests for the endpoint 'localhost:8000/api/school/parents/<int:id>'
         Returns the Updated data of the student with the provided ID as a JSON Object
         '''
-        id = kwargs['id']  ## Extracting ID
+        id = kwargs['pk']  ## Extracting ID
 
         data = ParentSerializer(data=request.data, instance=Parent.objects.get(parentID=id))
         if data.is_valid():
@@ -45,30 +48,30 @@ class SingleParent(APIView):
             return Response(data.errors)
 
 
-def delete(elf, request, *args, **kwargs):
-    '''
-            Handling DELETE Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
-    Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
-    '''
+    def delete(self, request, *args, **kwargs):
+        '''
+                Handling DELETE Requests for the endpoint 'localhost:8000/school/parents/<int:id>'
+        Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
+        '''
 
-    id = kwargs['id']  ## Extracting ID
+        id = kwargs['pk']
 
-    Msg = ""
-    ## Try and delete, and return a suitable message.
-    try:
-        Parent.objects.get(parentID=id).delete()
-    except Exception as e:
-        Msg = str(e)
-    else:
-        Msg = "Deleted"
+        try:
 
-    return JsonResponse({"message": Msg});
+            accId = ParentSerializer(Parent.objects.get(parentID=id)).data['login']
+            Accounts.objects.get(id=accId).delete()
+
+            return Response("Deleted!")
+        except Parent.DoesNotExist:
+            return Response("Not Found")
 
 
 class MultipleParents(APIView):
     '''
         Class for handling HTTP Requests for the endpoint 'localhost:8000/api/school/parents'
     '''
+    authentication_classes = [SessionAuth]
+    permission_classes = [UserPermission]
 
     def get(self, request):
         '''

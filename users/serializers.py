@@ -57,3 +57,8 @@ class SubjectSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class TokenSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = loginTokens
+        fields = "__all__"

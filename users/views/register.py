@@ -1,5 +1,5 @@
 from django.http import HttpRequest, JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import json
 from ..serializers import *
 from ..forms import *
@@ -75,4 +75,4 @@ class Register(APIView):
 #     "password": "Paswraaaaaod",
 #     "type": "PRNT", "firstName" : "AhmadJr", "lastName" : "Tamer","email" : "aaa@aa.com", "job":"sdasdsad", "parentID":1
 # }
-
+#

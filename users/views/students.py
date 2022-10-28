@@ -10,17 +10,19 @@ from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, mixins
-
+from ..permissions import *
 
 class SingleStudent(generics.GenericAPIView,
                     mixins.UpdateModelMixin,  ## For PUT Request
-                    mixins.DestroyModelMixin,  ## For DELETE Request
+                    APIView,
                     mixins.RetrieveModelMixin):  ## For GET Request
     '''
         Class for handling HTTP Requests for the endpoint 'localhost:8000/api/school/students/<int:pk>'
     '''
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+    authentication_classes = [SessionAuth]
+    permission_classes = [UserPermission]
 
     def get(self, request, *args, **kwargs):
         '''
@@ -41,7 +43,16 @@ class SingleStudent(generics.GenericAPIView,
                 Handling DELETE Requests for the endpoint 'localhost:8000/api/school/students/<int:id>'
         Returns Message in the form of a JSON Object {"message" : Msg} , Msg contains the string "Deleted" if it succeeded or contains the Error body.
         '''
-        return self.delete(request, *args, **kwargs)
+        id = kwargs['pk']
+
+        try:
+
+            accId = StudentSerializer(Student.objects.get(studentID=id)).data['login']
+            Accounts.objects.get(id=accId).delete()
+
+            return Response("Deleted!")
+        except Student.DoesNotExist:
+            return Response("Not Found")
 
 
 class MultipleStudents(generics.GenericAPIView,
@@ -51,9 +62,11 @@ class MultipleStudents(generics.GenericAPIView,
     '''
         Class for handling HTTP Requests for the endpoint 'localhost:8000/api/school/students'
     '''
+    authentication_classes = [SessionAuth]
 
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+    permission_classes = [UserPermission]
     def get(self, request, *args, **kwargs):
         '''
             Handling GET Requests for the endpoint 'localhost:8000/api/school/students' to Read Data from the database 'Student'

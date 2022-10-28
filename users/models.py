@@ -45,7 +45,7 @@ class Parent(models.Model):
     email = models.EmailField(max_length=256)
     job = models.CharField(max_length=150)
 
-    login = models.OneToOneField(Accounts, on_delete=models.CASCADE, null=True)
+    login = models.OneToOneField(Accounts, on_delete=models.CASCADE, null=True,related_name="parent")
 
     def __str__(self):
         return "%s %s" % (self.firstName,self.lastName)
@@ -75,9 +75,9 @@ class Student(models.Model):
     studentClass = models.IntegerField(null=True)
     age = models.IntegerField(null=True)
     parentID = models.ForeignKey(Parent, on_delete=models.CASCADE)
-    subjects = models.ManyToManyField(Subject, related_name="students", null=True)
+    subjects = models.ManyToManyField(Subject, related_name="students")
 
-    login = models.OneToOneField(Accounts, on_delete=models.CASCADE, null=True)
+    login = models.OneToOneField(Accounts, on_delete=models.CASCADE, null=True, related_name="student")
 
     def __str__(self):
         return "%s %s" % (self.firstName,self.lastName)
