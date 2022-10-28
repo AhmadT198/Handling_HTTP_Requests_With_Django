@@ -1,13 +1,11 @@
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from task4.settings import SECRET_KEY
 from ..permissions import SessionAuth
 from ..serializers import *
 from ..forms import *
-from ..models import Student
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics, mixins
+from rest_framework import status
 import jwt
 from datetime import datetime
 
@@ -93,5 +91,5 @@ class login(APIView):
 
                     return Response("Incorrect Username and/or Password", status.HTTP_401_UNAUTHORIZED)
 
-        except Exception as e:
+        except Exception as e: ## Incase the request body is invalid
             return Response("Invalid Input.", status.HTTP_400_BAD_REQUEST)

@@ -1,35 +1,12 @@
-from django.http import HttpRequest, JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
-import json
-
 from drf_yasg.utils import swagger_auto_schema
-
 from ..serializers import *
-from ..forms import *
-from ..models import Student
-from django.core import serializers
-from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics, mixins
-from rest_framework.request import Request
 
-register_request_body = {
-    "type": "stri",
-    "username": "string",
-    "password": "string",
-    "firstName": "string",
-    "lastName": "string",
-    "email": "user@example.com",
-    "grade": 0,
-    "studentClass": 0,
-    "age": 0,
-    "parentID": 0,
-    "job": "string",
-    "login": 0
-}
 
 class Register(APIView):
+
+    @swagger_auto_schema(request_body=AccountsSerializer)
     def post(self, request):
 
         ## Pass the request body to the Accounts Serializer to validate the Accounts Data ("username", "password", "type")
@@ -39,7 +16,6 @@ class Register(APIView):
         if data.is_valid():
 
             ## Extract the Student/Parent Data from the whole body
-
             userData = {}
             for key in data.initial_data:
                 print(key)
@@ -59,13 +35,13 @@ class Register(APIView):
                         data.save()
                         p.validated_data['login_id'] = data.data['id']
                         p.save()
-                    except Exception as e: ## Return suitable Errors
+                    except Exception as e:  ## Return suitable Errors
                         return Response(e)
 
-                    return Response(p.data) ## If it succeeded return the newly added data
+                    return Response(p.data)  ## If it succeeded return the newly added data
                 else:
-                    return Response(p.errors) ## ELse, Return Suitable Errors
-            else: ## SAME THING With Students
+                    return Response(p.errors)  ## ELse, Return Suitable Errors
+            else:  ## SAME THING With Students
                 s = StudentSerializer(data=userData)
                 if s.is_valid():
                     try:
@@ -79,16 +55,3 @@ class Register(APIView):
                     return Response(s.errors)
         else:
             return Response(data.errors)
-
-# {
-#      "username": "ASASAaaaaaaaS",
-#     "password": "Paswraaaaaod",
-#     "type": "PRNT", "firstName" : "Ahmad", "lastName" : "Tamer","email" : "aaa@aa.com", "job":"sdasdsad"
-# }
-
-# {
-#      "username": "AhmadSr2198",
-#     "password": "Paswraaaaaod",
-#     "type": "PRNT", "firstName" : "AhmadJr", "lastName" : "Tamer","email" : "aaa@aa.com", "job":"sdasdsad", "parentID":1
-# }
-#

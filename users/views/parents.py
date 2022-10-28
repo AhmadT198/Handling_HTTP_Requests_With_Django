@@ -1,18 +1,10 @@
-from django.http import HttpRequest, JsonResponse, HttpResponse
-from django.shortcuts import render
-import json
-
 from drf_yasg.utils import swagger_auto_schema
-
 from ..permissions import *
 from ..serializers import *
 from ..forms import *
-from ..models import Student
-from django.core import serializers
-from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics, mixins
+from rest_framework import status
 
 
 class SingleParent(APIView):
@@ -34,6 +26,7 @@ class SingleParent(APIView):
             return Response(data.data)
         except Parent.DoesNotExist:  ## Handling Error
             return Response(status.HTTP_404_NOT_FOUND)
+
     @swagger_auto_schema(request_body=ParentSerializer)
     def put(self, request, *args, **kwargs):
         '''
@@ -58,12 +51,12 @@ class SingleParent(APIView):
         id = kwargs['pk']
 
         try:
-
+            ## Delete the user Account which will delete the Parent which will delete all its Children(students)
             accId = ParentSerializer(Parent.objects.get(parentID=id)).data['login']
             Accounts.objects.get(id=accId).delete()
-
             return Response("Deleted!")
-        except Parent.DoesNotExist:
+
+        except Parent.DoesNotExist: ## Return Suitable Error
             return Response("Not Found")
 
 
@@ -73,7 +66,6 @@ class MultipleParents(APIView):
     '''
     authentication_classes = [SessionAuth]
     permission_classes = [UserPermission]
-
 
     def get(self, request):
         '''

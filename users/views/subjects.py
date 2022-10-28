@@ -1,18 +1,11 @@
-
-from django.http import HttpRequest, JsonResponse, HttpResponse
-from django.shortcuts import render
-import json
-
 from drf_yasg.utils import swagger_auto_schema
-
+from ..permissions import SessionAuth, UserPermission
 from ..serializers import *
 from ..forms import *
 from ..models import Student
-from django.core import serializers
-from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics, mixins
+from rest_framework import generics
 
 
 
@@ -22,8 +15,9 @@ class MultipleSubjects(generics.ListCreateAPIView):
     '''
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+
     @swagger_auto_schema(request_body=SubjectSerializer)
-    def post(self,request):
+    def post(self,request): ## Empty POST Method for the sake of adjusting the swagger schema
         pass
 
 
@@ -43,7 +37,8 @@ class ModifySubjects(APIView):
     '''
         A Class to Check, Add, or Delete the relationship between a specific Subject and a specific Student
     '''
-
+    authentication_classes = [SessionAuth]
+    permission_classes = [UserPermission]
     def get(self, request, *args, **kwargs):
         '''
             Returns whether the student has this subject or not.

@@ -1,19 +1,9 @@
-
-from django.http import HttpRequest, JsonResponse, HttpResponse
-from django.shortcuts import render
-import json
-
 from drf_yasg.utils import swagger_auto_schema
-
-from ..serializers import *
-from ..forms import *
-from ..models import Student
-from django.core import serializers
-from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, mixins
 from ..permissions import *
+
 
 class SingleStudent(generics.GenericAPIView,
                     mixins.UpdateModelMixin,  ## For PUT Request
@@ -49,11 +39,9 @@ class SingleStudent(generics.GenericAPIView,
         '''
         id = kwargs['pk']
 
-        try:
-
+        try: ## Attempting to delete the Account which will delete all the Children (Students)
             accId = StudentSerializer(Student.objects.get(studentID=id)).data['login']
             Accounts.objects.get(id=accId).delete()
-
             return Response("Deleted!")
         except Student.DoesNotExist:
             return Response("Not Found")
@@ -71,6 +59,7 @@ class MultipleStudents(generics.GenericAPIView,
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [UserPermission]
+
     def get(self, request, *args, **kwargs):
         '''
             Handling GET Requests for the endpoint 'localhost:8000/api/school/students' to Read Data from the database 'Student'
@@ -78,6 +67,7 @@ class MultipleStudents(generics.GenericAPIView,
         '''
 
         return self.list(request, *args, **kwargs)
+
     @swagger_auto_schema(request_body=StudentSerializer)
     def post(self, request, *arg, **kwargs):
         '''
@@ -86,4 +76,3 @@ class MultipleStudents(generics.GenericAPIView,
         '''
 
         return self.create(request, *arg, **kwargs)
-

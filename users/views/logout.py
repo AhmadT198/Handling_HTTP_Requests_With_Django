@@ -1,29 +1,22 @@
-from django.http import HttpRequest, JsonResponse, HttpResponse
-from django.shortcuts import render
-import json
-
-from task4.settings import SECRET_KEY
-from ..permissions import SessionAuth
-from ..serializers import *
 from ..forms import *
-from ..models import Student
-from django.core import serializers
-from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics, mixins
-from rest_framework.request import Request
-import jwt
-from datetime import datetime
+from rest_framework import status
 
 
 class Logout(APIView):
-
+    '''
+    a Class for Logging Out through the endpoint 'api/school/logout'
+    '''
     def get(self,request):
+        '''
+        Logging out
+        Returns a Respinse with "Logged out Successfully." incase of a valid token or "Invalid Token, You shoudnt be here." incase of an invalid token
+        '''
         currentToken = request.headers.get('jwt')
-        try:
+        try: ## Attempt to delete the Token
             loginTokens.objects.get(token=currentToken).delete()
-            return Response("Logged out Successfully.")
+            return Response("Logged out Successfully.", status.HTTP_200_OK)
         except loginTokens.DoesNotExist:
-            return Response("Invalid Token, You shoudnt be here.")
+            return Response("Invalid Token, You shoudnt be here.", status.HTTP_400_BAD_REQUEST)
 
