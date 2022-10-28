@@ -2,6 +2,9 @@
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.shortcuts import render
 import json
+
+from drf_yasg.utils import swagger_auto_schema
+
 from ..serializers import *
 from ..forms import *
 from ..models import Student
@@ -31,6 +34,7 @@ class SingleStudent(generics.GenericAPIView,
         '''
         return self.retrieve(request, *args, *kwargs)
 
+    @swagger_auto_schema(request_body=StudentSerializer)
     def put(self, request, *args, **kwargs):
         '''
                 Handling PUT Requests for the endpoint 'localhost:8000/api/school/students/<int:id>'
@@ -74,7 +78,7 @@ class MultipleStudents(generics.GenericAPIView,
         '''
 
         return self.list(request, *args, **kwargs)
-
+    @swagger_auto_schema(request_body=StudentSerializer)
     def post(self, request, *arg, **kwargs):
         '''
                     Handling POST Requests for the endpoint 'localhost:8000/api/school/students' and Adding sent data to the database 'student'

@@ -3,17 +3,17 @@ from .models import *
 from django.forms import ValidationError
 
 
-
 def typeCheck(value):
     if value != "STUD" and value != "PRNT":
         raise ValidationError("Invalid User Type.")
+
+
 class AccountsSerializer(serializers.ModelSerializer):
-    type = serializers.CharField(max_length=4, validators= [typeCheck])
+    type = serializers.CharField(max_length=4, validators=[typeCheck])
 
     class Meta:
         model = Accounts
         fields = "__all__"
-
 
 
 def nameCheck(value):
@@ -22,6 +22,7 @@ def nameCheck(value):
 
     if not value.isalpha():
         raise ValidationError("Name must consist of letters only.")
+
 
 class ParentSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(max_length=50, validators=[nameCheck])
@@ -32,12 +33,11 @@ class ParentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
 class SubjectListSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Subject
         fields = "__all__"
+
 
 class StudentSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(max_length=50, validators=[nameCheck])
@@ -49,16 +49,20 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
 class SubjectSerializer(serializers.ModelSerializer):
     students = StudentSerializer(many=True, required=False)
+
     class Meta:
         model = Subject
         fields = "__all__"
 
 
 class TokenSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = loginTokens
         fields = "__all__"
+
+# class LoginSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = loginTokens
+#         fields = "__all__"

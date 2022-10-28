@@ -1,6 +1,9 @@
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 import json
+
+from drf_yasg.utils import swagger_auto_schema
+
 from ..serializers import *
 from ..forms import *
 from ..models import Student
@@ -11,9 +14,22 @@ from rest_framework.response import Response
 from rest_framework import status, generics, mixins
 from rest_framework.request import Request
 
+register_request_body = {
+    "type": "stri",
+    "username": "string",
+    "password": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "email": "user@example.com",
+    "grade": 0,
+    "studentClass": 0,
+    "age": 0,
+    "parentID": 0,
+    "job": "string",
+    "login": 0
+}
 
 class Register(APIView):
-
     def post(self, request):
 
         ## Pass the request body to the Accounts Serializer to validate the Accounts Data ("username", "password", "type")

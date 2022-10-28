@@ -2,6 +2,9 @@
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.shortcuts import render
 import json
+
+from drf_yasg.utils import swagger_auto_schema
+
 from ..serializers import *
 from ..forms import *
 from ..models import Student
@@ -19,6 +22,10 @@ class MultipleSubjects(generics.ListCreateAPIView):
     '''
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+    @swagger_auto_schema(request_body=SubjectSerializer)
+    def post(self,request):
+        pass
+
 
 
 class SingleSubject(generics.DestroyAPIView,
@@ -63,7 +70,6 @@ class ModifySubjects(APIView):
             Msg = {"type": str(e.__class__.__name__), "message": str(e), 'code': 500}
 
         return Response(Msg, status=Msg['code']);
-
     def post(self, request, *args, **kwargs):
         '''
             Creates a Relationship between the given Student and the given Subject.

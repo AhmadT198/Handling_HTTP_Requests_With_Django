@@ -1,7 +1,8 @@
-
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.shortcuts import render
 import json
+
+from drf_yasg.utils import swagger_auto_schema
 
 from ..permissions import *
 from ..serializers import *
@@ -20,6 +21,7 @@ class SingleParent(APIView):
     '''
     authentication_classes = [SessionAuth]
     permission_classes = [UserPermission]
+
     def get(self, request, *args, **kwargs):
         '''
             Handling GET Requests for the endpoint 'localhost:8000/api/school/parents/<int:id>'
@@ -32,7 +34,7 @@ class SingleParent(APIView):
             return Response(data.data)
         except Parent.DoesNotExist:  ## Handling Error
             return Response(status.HTTP_404_NOT_FOUND)
-
+    @swagger_auto_schema(request_body=ParentSerializer)
     def put(self, request, *args, **kwargs):
         '''
                 Handling PUT Requests for the endpoint 'localhost:8000/api/school/parents/<int:id>'
@@ -46,7 +48,6 @@ class SingleParent(APIView):
             return Response(data.data)
         else:
             return Response(data.errors)
-
 
     def delete(self, request, *args, **kwargs):
         '''
@@ -73,6 +74,7 @@ class MultipleParents(APIView):
     authentication_classes = [SessionAuth]
     permission_classes = [UserPermission]
 
+
     def get(self, request):
         '''
             Handling GET Requests for the endpoint 'localhost:8000/api/school/parents' to Read Data from the database 'Parent'
@@ -83,6 +85,7 @@ class MultipleParents(APIView):
         data = ParentSerializer(Parent.objects.all(), many=True)
         return Response(data.data)
 
+    @swagger_auto_schema(request_body=ParentSerializer)
     def post(self, request):
         '''
                     Handling POST Requests for the endpoint 'localhost:8000/api/school/parents' and Adding sent data to the database 'Parent'
