@@ -3,6 +3,7 @@ from rest_framework import exceptions
 import jwt
 from django.shortcuts import redirect
 from rest_framework import permissions
+from rest_framework.response import Response
 
 from task4.settings import SECRET_KEY
 from datetime import datetime
@@ -66,7 +67,11 @@ class UserPermission(permissions.BasePermission):
     def has_permission(self, request, view):
 
         ## Extract data from Token
-        data = jwt.decode(request.headers.get('jwt'), SECRET_KEY, algorithms=["HS256"])
+        try:
+            data = jwt.decode(request.headers.get('jwt'), SECRET_KEY, algorithms=["HS256"])
+        except Exception as e:
+            raise exceptions.AuthenticationFailed("Invalid Token.")
+
         data = AccountsSerializer(Accounts.objects.get(username=data['username']))
         data = data.data
 
